@@ -1,7 +1,7 @@
 package ec.com.banco.gabriel.reyes.app.modelo;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,7 +24,7 @@ public class Movimiento {
 	private Long codigoMovimiento;
 	
 	@Column(name = "fecha_movimiento")
-	private Date fechaMovimiento;
+	private LocalDateTime fechaMovimiento;
 	
 	@Column(name = "tipo_movimiento")
 	private String tipoMovimiento;

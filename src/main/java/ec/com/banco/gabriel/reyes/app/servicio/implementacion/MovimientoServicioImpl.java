@@ -1,15 +1,18 @@
 package ec.com.banco.gabriel.reyes.app.servicio.implementacion;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ec.com.banco.gabriel.reyes.app.dto.EstadoCuentaDto;
 import ec.com.banco.gabriel.reyes.app.modelo.Cuenta;
 import ec.com.banco.gabriel.reyes.app.modelo.Movimiento;
 import ec.com.banco.gabriel.reyes.app.repositorio.CuentaRepositorio;
-import ec.com.banco.gabriel.reyes.app.repositorio.MoviemientoRepositorio;
+import ec.com.banco.gabriel.reyes.app.repositorio.MovimientoRepositorio;
 import ec.com.banco.gabriel.reyes.app.servicio.MovimientoServicio;
 import ec.com.banco.gabriel.reyes.app.servicio.excepcion.MovimientoExcepcion;
 import ec.com.banco.gabriel.reyes.app.to.MovimientoTo;
@@ -20,14 +23,14 @@ public class MovimientoServicioImpl implements MovimientoServicio {
 	private static final String MENSAJE_SALDO = "Saldo no disponible";
 
 	@Autowired
-	private MoviemientoRepositorio moviemientoRepositorio;
+	private MovimientoRepositorio movimientoRepositorio;
 
 	@Autowired
 	private CuentaRepositorio cuentaRepositorio;
 
 	@Override
 	public Movimiento obtenerPorClavePrimaria(Long codigoMovimiento) {
-		return moviemientoRepositorio.getById(codigoMovimiento);
+		return movimientoRepositorio.getById(codigoMovimiento);
 	}
 
 	@Override
@@ -42,12 +45,12 @@ public class MovimientoServicioImpl implements MovimientoServicio {
 			throw new MovimientoExcepcion(
 					"No se puede almacenar el movimiento. No existe cuenta para: " + numeroCuenta);
 		}
-		Long codigoUltimoMovimiento = moviemientoRepositorio.obtenerCodigoUltimoMovimiento(cuenta);
+		Long codigoUltimoMovimiento = movimientoRepositorio.obtenerCodigoUltimoMovimiento(cuenta);
 		if (null == codigoUltimoMovimiento) {
 			validarSaldo(movimiento, cuenta);
 			return guardarMovimiento(obtenerMovimiento(movimiento, cuenta));
 		} else {
-			Movimiento ultimoMovimiento = moviemientoRepositorio.getById(codigoUltimoMovimiento);
+			Movimiento ultimoMovimiento = movimientoRepositorio.getById(codigoUltimoMovimiento);
 			BigDecimal saldo = ultimoMovimiento.getSaldo();
 			if ("C".equals(movimiento.getTipoMovimiento())) {
 				saldo = saldo.add(movimiento.getValor());
@@ -57,7 +60,7 @@ public class MovimientoServicioImpl implements MovimientoServicio {
 			}
 			movimiento.setSaldo(saldo);
 			movimiento.setCuenta(cuenta);
-			movimiento.setFechaMovimiento(new Date());
+			movimiento.setFechaMovimiento(LocalDateTime.now());
 		}
 
 		return guardarMovimiento(movimiento);
@@ -80,7 +83,7 @@ public class MovimientoServicioImpl implements MovimientoServicio {
 	}
 
 	private Movimiento obtenerMovimiento(Movimiento movimiento, Cuenta cuenta) {
-		movimiento.setFechaMovimiento(new Date());
+		movimiento.setFechaMovimiento(LocalDateTime.now());
 		movimiento.setCuenta(cuenta);
 		if (movimiento.getTipoMovimiento().equals("D")) {
 			movimiento.setSaldo(cuenta.getSaldoInicial().subtract(movimiento.getValor()));
@@ -93,12 +96,19 @@ public class MovimientoServicioImpl implements MovimientoServicio {
 
 	@Override
 	public Movimiento guardarMovimiento(Movimiento movimiento) {
-		return moviemientoRepositorio.save(movimiento);
+		return movimientoRepositorio.save(movimiento);
 	}
 
 	@Override
 	public void eliminar(Movimiento movimiento) {
-		moviemientoRepositorio.delete(movimiento);
+		movimientoRepositorio.delete(movimiento);
+	}
+
+	@Override
+	public List<EstadoCuentaDto> obtenerEstadoCuenta(String identificacion, LocalDateTime fechaDesde,
+			LocalDateTime fechaHasta) {
+		return movimientoRepositorio.obtenerEstadoCuenta(fechaDesde, fechaHasta, identificacion)
+				.orElse(new ArrayList<>());
 	}
 
 }
