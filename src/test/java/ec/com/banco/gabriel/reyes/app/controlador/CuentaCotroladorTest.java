@@ -89,5 +89,4 @@ public class CuentaCotroladorTest {
 		cliente.setTelefono("02228489");
 		return cliente;
 	}
-
 }
